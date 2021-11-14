@@ -6,7 +6,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.Geofence
@@ -23,57 +22,46 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
             if (geofencingEvent.hasError()) {
                 val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
                 Log.e(TAG, errorMessage)
+                sendNotification(context, errorMessage)
                 return
             }
+
             val geofenceTransition = geofencingEvent.geofenceTransition
+
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+                val geofenceTransitionString =
+                    when (geofenceTransition) {
+                        Geofence.GEOFENCE_TRANSITION_ENTER -> "Anda telah memasuki area"
+                        Geofence.GEOFENCE_TRANSITION_DWELL -> "Anda telah di dalam area"
+                        else -> "Invalid transition type"
+                    }
 
                 val triggeringGeofences = geofencingEvent.triggeringGeofences
-                val geofenceTransitionDetails = getGeofenceTransitionDetails(
-                    geofenceTransition,
-                    triggeringGeofences
-                )
-                sendNotification(context, geofenceTransitionDetails)
+                val requestId = triggeringGeofences[0].requestId
+
+                val geofenceTransitionDetails = "$geofenceTransitionString $requestId"
                 Log.i(TAG, geofenceTransitionDetails)
+
+                sendNotification(context, geofenceTransitionDetails)
             } else {
-                Log.e(TAG, "Invalid transition type : $geofenceTransition")
-                sendNotification(context, ""+geofenceTransition+geofencingEvent.triggeringLocation)
+                val errorMessage = "Invalid transition type : $geofenceTransition"
+                Log.e(TAG, errorMessage)
+                sendNotification(context, errorMessage)
             }
-        }
-    }
-
-    private fun getGeofenceTransitionDetails(
-        geoFenceTransition: Int,
-        triggeringGeofences: List<Geofence>
-    ): String {
-        val geofenceTransitionString: String = getTransitionString(geoFenceTransition)
-
-        // Get the Ids of each geofence that was triggered.
-        val triggeringGeofencesIdsList = ArrayList<Any>()
-        for (geofence in triggeringGeofences) {
-            triggeringGeofencesIdsList.add(geofence.requestId)
-        }
-        val triggeringGeofencesIdsString = TextUtils.join(", ", triggeringGeofencesIdsList)
-        return "$geofenceTransitionString $triggeringGeofencesIdsString"
-    }
-
-    private fun getTransitionString(transitionType: Int): String {
-        return when (transitionType) {
-            Geofence.GEOFENCE_TRANSITION_ENTER -> "Anda telah memasuki area"
-            Geofence.GEOFENCE_TRANSITION_DWELL -> "Anda telah di dalam area"
-            else -> "Invalid transition type"
         }
     }
 
     private fun sendNotification(context: Context, geofenceTransitionDetails: String) {
-        val mNotificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val mNotificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val mBuilder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(geofenceTransitionDetails)
             .setContentText("Anda sudah bisa absen sekarang :)")
             .setSmallIcon(R.drawable.ic_baseline_notifications_active_24)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
+            val channel =
+                NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
             mBuilder.setChannelId(CHANNEL_ID)
             mNotificationManager.createNotificationChannel(channel)
         }
