@@ -79,6 +79,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         addGeofence()
     }
 
+    private val requestBackgroundLocationPermissionLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                getMyLocation()
+            }
+        }
+
+    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+
     @TargetApi(Build.VERSION_CODES.Q)
     private val requestLocationPermissionLauncher =
         registerForActivityResult(
@@ -92,17 +103,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 }
             }
         }
-
-    private val requestBackgroundLocationPermissionLauncher =
-        registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { isGranted: Boolean ->
-            if (isGranted) {
-                getMyLocation()
-            }
-        }
-
-    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
     private fun checkPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(

@@ -16,39 +16,39 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 
-        if (intent.action == ACTION_GEOFENCE_EVENT) {
-            val geofencingEvent = GeofencingEvent.fromIntent(intent)
+                if (intent.action == ACTION_GEOFENCE_EVENT) {
+                    val geofencingEvent = GeofencingEvent.fromIntent(intent)
 
-            if (geofencingEvent.hasError()) {
-                val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
-                Log.e(TAG, errorMessage)
-                sendNotification(context, errorMessage)
-                return
-            }
-
-            val geofenceTransition = geofencingEvent.geofenceTransition
-
-            if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
-                val geofenceTransitionString =
-                    when (geofenceTransition) {
-                        Geofence.GEOFENCE_TRANSITION_ENTER -> "Anda telah memasuki area"
-                        Geofence.GEOFENCE_TRANSITION_DWELL -> "Anda telah di dalam area"
-                        else -> "Invalid transition type"
+                    if (geofencingEvent.hasError()) {
+                        val errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.errorCode)
+                        Log.e(TAG, errorMessage)
+                        sendNotification(context, errorMessage)
+                        return
                     }
 
-                val triggeringGeofences = geofencingEvent.triggeringGeofences
-                val requestId = triggeringGeofences[0].requestId
+                    val geofenceTransition = geofencingEvent.geofenceTransition
 
-                val geofenceTransitionDetails = "$geofenceTransitionString $requestId"
-                Log.i(TAG, geofenceTransitionDetails)
+                    if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER || geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+                        val geofenceTransitionString =
+                            when (geofenceTransition) {
+                                Geofence.GEOFENCE_TRANSITION_ENTER -> "Anda telah memasuki area"
+                                Geofence.GEOFENCE_TRANSITION_DWELL -> "Anda telah di dalam area"
+                                else -> "Invalid transition type"
+                            }
 
-                sendNotification(context, geofenceTransitionDetails)
-            } else {
-                val errorMessage = "Invalid transition type : $geofenceTransition"
-                Log.e(TAG, errorMessage)
-                sendNotification(context, errorMessage)
-            }
-        }
+                        val triggeringGeofences = geofencingEvent.triggeringGeofences
+                        val requestId = triggeringGeofences[0].requestId
+
+                        val geofenceTransitionDetails = "$geofenceTransitionString $requestId"
+                        Log.i(TAG, geofenceTransitionDetails)
+
+                        sendNotification(context, geofenceTransitionDetails)
+                    } else {
+                        val errorMessage = "Invalid transition type : $geofenceTransition"
+                        Log.e(TAG, errorMessage)
+                        sendNotification(context, errorMessage)
+                    }
+                }
     }
 
     private fun sendNotification(context: Context, geofenceTransitionDetails: String) {
